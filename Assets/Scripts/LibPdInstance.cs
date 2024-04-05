@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using AOT;
+using UnityEngine.Networking;
 
 #region UnityEvent types
 //------------------------------------------------------------------------------
@@ -107,6 +108,9 @@ public class LibPdInstance : MonoBehaviour
 	
 	//--------------------------------------------------------------------------
 	/// libpd functions that we need to be able to call from C#.
+	[DllImport(DLL_NAME)]
+	private static extern int libpd_init();
+
 	[DllImport(DLL_NAME)]
 	private static extern int libpd_queued_init();
 
@@ -503,12 +507,16 @@ public class LibPdInstance : MonoBehaviour
 	#endregion
 	
 	#region MonoBehaviour methods
+
+	public string id;
 	//--------------------------------------------------------------------------
 	/// Initialise LibPd.
 	void Awake()
 	{
 		//Initialise libpd if possible, report any errors.
-		int initErr = libpd_queued_init();
+		//Create our instance.
+		
+		int initErr = libpd_init();
 		if (initErr != 0)
 		{
 			Debug.LogWarning("Warning; libpd_init() returned " + initErr);
@@ -518,6 +526,13 @@ public class LibPdInstance : MonoBehaviour
 		//Initialise libpd, if it's not already.
 		if (!pdInitialised)
 		{
+			// Create new pd instance
+			instance = libpd_new_instance();
+			libpd_set_instance(instance);
+
+			// init queue buffers
+			libpd_queued_init();
+
 			//Setup hooks.
 			printHook = new LibPdPrintHook(PrintOutput);
 			libpd_set_queued_printhook(printHook);
@@ -580,11 +595,8 @@ public class LibPdInstance : MonoBehaviour
 		AudioSettings.GetDSPBufferSize(out bufferSize, out noOfBuffers);
 		numTicks = bufferSize/libpd_blocksize();
 
-		//Create our instance.
-		instance = libpd_new_instance();
-
 		//Set our instance.
-		libpd_set_instance(instance);
+		// libpd_set_instance(instance);
 
 		//Initialise audio.
 		int requestedNumSpeakers = GetNumSpeakers(AudioSettings.speakerMode);
@@ -614,18 +626,36 @@ public class LibPdInstance : MonoBehaviour
 			}
 			else
 			{
+				string dir;
 				//Create our bindings dictionary.
 				bindings = new Dictionary<string, IntPtr>();
 
 				//Open our patch.
+
+				#if UNITY_ANDROID
+					//Download from streams assets and move to persistentDataPath
+					UnityWebRequest reader = UnityWebRequest.Get(Application.streamingAssetsPath + patchDir + patchName + ".pd");
+					reader.SendWebRequest();
+
+					while (!reader.isDone) ;
+					
+					dir = Application.persistentDataPath + patchDir;
+
+					System.IO.Directory.CreateDirectory(dir);
+
+					System.IO.File.WriteAllText(dir + "/" + patchName + ".pd", reader.downloadHandler.text);
+				#else
+					dir = Application.streamingAssetsPath + patchDir;
+				#endif
+
 				patchPointer = libpd_openfile(patchName + ".pd",
-											  Application.streamingAssetsPath + patchDir);
+												dir);
+
 				if(patchPointer == IntPtr.Zero)
-				{
+				{					
 					Debug.LogError(gameObject.name +
-								   ": Could not open patch. Directory: " +
-								   Application.streamingAssetsPath + patchDir +
-								   " Patch: " + patchName + ".pd");
+								": Could not open patch. Directory: " + dir +
+								" Patch: " + patchName + ".pd");
 					patchFail = true;
 				}
 
@@ -710,6 +740,7 @@ public class LibPdInstance : MonoBehaviour
 		 */
 		if(this == activeInstances[0])
 		{
+			libpd_set_instance(instance);
 			libpd_queued_receive_pd_messages();
 			libpd_queued_receive_midi_messages();
 		}
