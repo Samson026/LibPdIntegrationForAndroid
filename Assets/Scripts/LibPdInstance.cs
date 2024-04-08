@@ -1,4 +1,4 @@
-﻿// LibPdInstance.cs - Unity integration of libpd, supporting multiple instances.
+// LibPdInstance.cs - Unity integration of libpd, supporting multiple instances.
 // -----------------------------------------------------------------------------
 // Copyright (c) 2019 Niall Moody
 // 
@@ -508,85 +508,80 @@ public class LibPdInstance : MonoBehaviour
 	
 	#region MonoBehaviour methods
 
-	public string id;
 	//--------------------------------------------------------------------------
 	/// Initialise LibPd.
 	void Awake()
 	{
 		//Initialise libpd if possible, report any errors.
-		//Create our instance.
+
+		if (!pdInitialised) {
+			int initErr = libpd_init();
+			if (initErr != 0)
+			{
+				Debug.LogWarning("Warning; libpd_init() returned " + initErr);
+				Debug.LogWarning("(if you're running this in the editor that probably just means this isn't the first time you've run your game, and is not a problem)");
+			}
+			else{
+				pdInitialised = true;
+			}
+		}
 		
-		int initErr = libpd_init();
-		if (initErr != 0)
-		{
-			Debug.LogWarning("Warning; libpd_init() returned " + initErr);
-			Debug.LogWarning("(if you're running this in the editor that probably just means this isn't the first time you've run your game, and is not a problem)");
-		}
+		// Create new pd instance
+		instance = libpd_new_instance();
+		libpd_set_instance(instance);
 
-		//Initialise libpd, if it's not already.
-		if (!pdInitialised)
-		{
-			// Create new pd instance
-			instance = libpd_new_instance();
-			libpd_set_instance(instance);
+		// init queue buffers
+		libpd_queued_init();
 
-			// init queue buffers
-			libpd_queued_init();
+		//Setup hooks.
+		printHook = new LibPdPrintHook(PrintOutput);
+		libpd_set_queued_printhook(printHook);
+		
+		bangHook = new LibPdBangHook(BangOutput);
+		libpd_set_queued_banghook(bangHook);
+		
+		floatHook = new LibPdFloatHook(FloatOutput);
+		libpd_set_queued_floathook(floatHook);
+		
+		symbolHook = new LibPdSymbolHook(SymbolOutput);
+		libpd_set_queued_symbolhook(symbolHook);
+		
+		listHook = new LibPdListHook(ListOutput);
+		libpd_set_queued_listhook(listHook);
+		
+		messageHook = new LibPdMessageHook(MessageOutput);
+		libpd_set_queued_messagehook(messageHook);
+		
+		noteOnHook = new LibPdMidiNoteOnHook(MidiNoteOnOutput);
+		libpd_set_queued_noteonhook(noteOnHook);
 
-			//Setup hooks.
-			printHook = new LibPdPrintHook(PrintOutput);
-			libpd_set_queued_printhook(printHook);
-			
-			bangHook = new LibPdBangHook(BangOutput);
-			libpd_set_queued_banghook(bangHook);
-			
-			floatHook = new LibPdFloatHook(FloatOutput);
-			libpd_set_queued_floathook(floatHook);
-			
-			symbolHook = new LibPdSymbolHook(SymbolOutput);
-			libpd_set_queued_symbolhook(symbolHook);
-			
-			listHook = new LibPdListHook(ListOutput);
-			libpd_set_queued_listhook(listHook);
-			
-			messageHook = new LibPdMessageHook(MessageOutput);
-			libpd_set_queued_messagehook(messageHook);
-			
-			noteOnHook = new LibPdMidiNoteOnHook(MidiNoteOnOutput);
-			libpd_set_queued_noteonhook(noteOnHook);
+		controlChangeHook = new LibPdMidiControlChangeHook(MidiControlChangeOutput);
+		libpd_set_queued_controlchangehook(controlChangeHook);
 
-			controlChangeHook = new LibPdMidiControlChangeHook(MidiControlChangeOutput);
-			libpd_set_queued_controlchangehook(controlChangeHook);
+		programChangeHook = new LibPdMidiProgramChangeHook(MidiProgramChangeOutput);
+		libpd_set_queued_programchangehook(programChangeHook);
 
-			programChangeHook = new LibPdMidiProgramChangeHook(MidiProgramChangeOutput);
-			libpd_set_queued_programchangehook(programChangeHook);
+		pitchBendHook = new LibPdMidiPitchBendHook(MidiPitchBendOutput);
+		libpd_set_queued_pitchbendhook(pitchBendHook);
 
-			pitchBendHook = new LibPdMidiPitchBendHook(MidiPitchBendOutput);
-			libpd_set_queued_pitchbendhook(pitchBendHook);
+		aftertouchHook = new LibPdMidiAftertouchHook(MidiAftertouchOutput);
+		libpd_set_queued_aftertouchhook(aftertouchHook);
 
-			aftertouchHook = new LibPdMidiAftertouchHook(MidiAftertouchOutput);
-			libpd_set_queued_aftertouchhook(aftertouchHook);
+		polyAftertouchHook = new LibPdMidiPolyAftertouchHook(MidiPolyAftertouchOutput);
+		libpd_set_queued_polyaftertouchhook(polyAftertouchHook);
 
-			polyAftertouchHook = new LibPdMidiPolyAftertouchHook(MidiPolyAftertouchOutput);
-			libpd_set_queued_polyaftertouchhook(polyAftertouchHook);
+		midiByteHook = new LibPdMidiByteHook(MidiByteOutput);
+		libpd_set_queued_midibytehook(midiByteHook);
+		
+		//Try and add the patch directory to libpd's search path for
+		//loading externals (still can't seem to load externals when
+		//running in Unity though).
+		if(patchDir != String.Empty)
+			libpd_add_to_search_path(UnityEngine.Application.streamingAssetsPath + patchDir);
 
-			midiByteHook = new LibPdMidiByteHook(MidiByteOutput);
-			libpd_set_queued_midibytehook(midiByteHook);
-
-			pdInitialised = true;
-			
-			//Try and add the patch directory to libpd's search path for
-			//loading externals (still can't seem to load externals when
-			//running in Unity though).
-			if(patchDir != String.Empty)
-				libpd_add_to_search_path(Application.streamingAssetsPath + patchDir);
-
-			//Make sure our static pipePrintToConsole variable is set
-			//correctly.
-			pipePrintToConsoleStatic = pipePrintToConsole;
-		}
-		else
-			pipePrintToConsole = pipePrintToConsoleStatic;
+		//Make sure our static pipePrintToConsole variable is set
+		//correctly.
+		pipePrintToConsoleStatic = pipePrintToConsole;
 
 		//Calc numTicks.
 		int bufferSize;
