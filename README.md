@@ -38,7 +38,7 @@ The **Pipe Print To Console** toggle provided by **Lib Pd Instance** lets you pi
 
 See the sister project [LibPdIntegrationExamples](https://github.com/LibPdIntegration/LibPdIntegrationExamples) and the [wiki](https://github.com/LibPdIntegration/LibPdIntegration/wiki) for more information, including how to communicate between Unity and libpd. And there's also [Yann Seznec's](http://www.yannseznec.com/) excellent [introductory videos on youtube](https://www.youtube.com/playlist?list=PLXGA7pVjV1jdfe2FaEs2EzuZ-16HLH1_0).
 
-**Note:** If building for mac, Unity may complain about conflicting versions of libpd. This is because Unity mistakenly assumes the 64-bit Linux lipbd binary is actually a mac binary. To rectify the issue, select the 64-bit linux binary (*Assets/Plugins/x64/libpd.so*) and uncheck the **Mac OS X x64** toggle in the Inspector to match the following image, then click **Apply**:
+**Note:** Ensure pd-core.aar inside of [Assets/StreamingAssets/Android](Assets/StreamingAssets/Android) has been toggled to build for Android platforms.
 
 ![Correct Inspector settings for the 64-bit libpd Linux binary](docs/images/osx-linux-binary-exclusion.png)
 
