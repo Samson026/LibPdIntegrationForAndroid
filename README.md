@@ -15,7 +15,7 @@ If you would like to take ownership, please get in touch. I no longer have the t
 
 ## About
 
-LibPdIntegration is a wrapper for [libpd](https://github.com/libpd/libpd) for incorporating [Pure Data](https://puredata.info/) patches into [Unity](https://unity3d.com/). It currently supports Windows, OSX, Linux, and iOS (iOS support courtesy [thefuntastic](https://github.com/thefuntastic)).
+This project is a fork of [LibPdIntergration](https://github.com/LibPdIntegration/LibPdIntegration) to support Android platforms as well as additional wrapper changes to support later versions of [libpd](https://github.com/libpd/libpd). Currently this project only supports Android platforms and therefore does not support Unity's play mode.
 
 ## Unique Features
 
