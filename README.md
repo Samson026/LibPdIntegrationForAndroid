@@ -1,9 +1,5 @@
 # LibPd Unity Integration
 
-## Note: this repository is no longer maintained
-
-If you would like to take ownership, please get in touch. I no longer have the time or resources to maintain it myself.
-
 - [About](#about)
 - [Unique Features](#unique-features)
 - [Quickstart](#quickstart)
@@ -75,21 +71,6 @@ Multiply the output of your patch with the stereo input from an **`adc~`** objec
 
 This will effectively apply the spatialisation that Unity applies to Audio Sources by default, to the output of our PD patch. For more information, see the [LibPdIntegrationExamples](https://github.com/LibPdIntegration/LibPdIntegrationExamples) project, and particularly the comments in the [_FilteredNoise-ADC.pd_](https://github.com/LibPdIntegration/LibPdIntegrationExamples/blob/master/Assets/StreamingAssets/PdAssets/SpatialisationPatches/FilteredNoise-ADC.pd) patch.
 
-## Caveats
-
-- Only [Pure Data Vanilla](https://puredata.info/downloads/pure-data) is supported. Additional objects (externals) included with distributions like [Purr Data](https://puredata.info/downloads/purr-data) and Pd-Extended (deprecated) do not currently work. See [issue 14](https://github.com/LibPdIntegration/LibPdIntegration/issues/14) for an explanation of why this is; it will hopefully be resolved in a future release.
-
-- Although libpd provides C# bindings, 1.) I could not get them to play nicely with Unity, and 2.) they don't (at the time of writing this) support libpd's new multiple instance system. As such, LibPdIntegration interfaces directly with the libpd C library. This may change if libpd's C# bindings get updated in the future, but they should be functionally identical to the C library anyway, so I'm not sure it's necessary.
-
-- **`readsf~`** does not work. This is due to a bug in pure data. At the time of writing there's a [pull request](https://github.com/pure-data/pure-data/pull/1227) that should fix it; once that's been approved I'll try and get new libpd binaries built (**anyone who can contribute OSX, Linux and/or iOS binaries please let me know!**).
-
-  In the meantime, you can work around the problem by using **`soundfiler`** instead of **`readsf~`**.
-
-## Related Projects
-
-- [LibPdIntegration Examples:](https://github.com/LibPdIntegration/LibPdIntegrationExamples) An example Unity project demonstrating how to use LibPdIntegration.
-- [LibPdIntegration Tests:](https://github.com/LibPdIntegration/LibPdIntegrationTests) Internal project used to verify LibPdIntegration is working correctly.
-- [black and secret places:](https://github.com/NiallMoody/black-and-secret-places) A project where myself ([Niall Moody](http://www.niallmoody.com/)) and [Yann Seznec](https://www.yannseznec.com/) are taking turns streaming the audio implementation using Pure Data and LibPdIntegration. You can view the stream playlist [here](https://www.youtube.com/playlist?list=PL9mtAkCrEZavP0T_C4mLqKdxYD-4wURoZ), and if you want to follow along at home you can download releases for each stream from the [github page](https://github.com/NiallMoody/black-and-secret-places).
 
 ## Pure Data Resources
 
