@@ -405,9 +405,11 @@ public class LibPdInstance : MonoBehaviour
 	/// The Pd patch this instance is running.
 	[HideInInspector]
 	public string patchName;
+	public string subPatchNames;
 	///	Path to the folder the patch is in.
 	[HideInInspector]
 	public string patchDir;
+	public string subPatchDirs;
 
 	#if UNITY_EDITOR
 	/// This is a slightly tricky workaround we use so that we can drag and drop
@@ -421,6 +423,9 @@ public class LibPdInstance : MonoBehaviour
 	///	(We have to store Pd patches in StreamingAssets because libpd requires
 	///	 us to load patches from files on the filesystem)
 	public UnityEditor.DefaultAsset patch;
+
+	/// Add sub patches required by the main patch
+	public List<UnityEditor.DefaultAsset> subPatches;
 	#endif
 
 	/// Hacky way of making pipePrintToConsoleStatic visible in the inspector.
@@ -639,6 +644,19 @@ public class LibPdInstance : MonoBehaviour
 					System.IO.Directory.CreateDirectory(dir);
 
 					System.IO.File.WriteAllText(dir + "/" + patchName + ".pd", reader.downloadHandler.text);
+
+					// Download the subpatches
+					for (int i = 0; i < subPatches.Length; i++) {
+						UnityWebRequest reader = UnityWebRequest.Get(Application.streamingAssetsPath + subPatchDirs[i] + subPatchNames[i] + ".pd");
+						reader.SendWebRequest();
+
+						while (!reader.isDone) ;
+						
+						dir = Application.persistentDataPath + subPatchDirs[i];
+
+						System.IO.Directory.CreateDirectory(dir);
+						System.IO.File.WriteAllText(dir + "/" + subPatchNames[i] + ".pd", reader.downloadHandler.text);
+					}
 				#else
 					dir = Application.streamingAssetsPath + patchDir;
 				#endif
@@ -769,6 +787,17 @@ public class LibPdInstance : MonoBehaviour
 
 			//Remove the name of the patch, as we only need the directory.
 			patchDir = patchDir.Substring(0, patchDir.LastIndexOf('/') + 1);
+
+			// Add all subpatches
+			for (int i = 0; i < subPatches.Length; i++) {
+				// Add the name of the subpatch
+				subPatchNames.Add(subPatches[i].name);
+
+				// Add the directory of the subpatch
+				subPatchDir = AssetDatabase.GetAssetPath(subPatches[i].GetInstanceID());
+				subPatchDir = patchDir.Substring(0, subPatchDir.LastIndexOf('/') + 1);
+				subPatchDirs.Add(subPatchDir);
+			}
 		}
 		#endif
 	}
