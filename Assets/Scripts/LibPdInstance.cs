@@ -405,10 +405,14 @@ public class LibPdInstance : MonoBehaviour
 	/// The Pd patch this instance is running.
 	[HideInInspector]
 	public string patchName;
+	// The sub-patches required inside of Patch
+	[HideInInspector]
 	public string subPatchNames;
 	///	Path to the folder the patch is in.
 	[HideInInspector]
 	public string patchDir;
+	// The patch to the sub-patches required inside of Patch
+	[HideInInspector]
 	public string subPatchDirs;
 
 	#if UNITY_EDITOR
